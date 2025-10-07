@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Assignment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.5s ease;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 60px 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            opacity: 0;
+            transform: scale(0.9);
+            animation: fadeIn 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .loading {
+            font-size: 1.5em;
+            color: #666;
+        }
+
+        .team-display {
+            display: none;
+        }
+
+        .team-display.show {
+            display: block;
+            animation: slideUp 0.6s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .team-icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+            animation: bounce 1s ease infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        h1 {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .team-name {
+            font-size: 4em;
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .message {
+            font-size: 1.3em;
+            color: #555;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 8px 20px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 20px;
+            color: #333;
+        }
+
+        .error {
+            color: #d32f2f;
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 40px 25px;
+            }
+            
+            .team-name {
+                font-size: 3em;
+            }
+            
+            .team-icon {
+                font-size: 4em;
+            }
+        }
+    </style>
+    <!-- FingerprintJS for device fingerprinting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fingerprintjs2/2.1.0/fingerprint2.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <p class="loading">⏳ Assigning your team...</p>
+        <div class="team-display" id="team-display"></div>
+    </div>
+
+    <script>
+        // Color mapping for teams
+        const teamColors = {
+            'Red': '#FF5252',
+            'Blue': '#2196F3',
+            'Green': '#4CAF50',
+            'Yellow': '#FFEB3B',
+            'Purple': '#9C27B0',
+            'Orange': '#FF9800'
+        };
+
+        // Generate device fingerprint and assign team
+        async function assignTeam() {
+            try {
+                // Generate fingerprint using FingerprintJS
+                const components = await new Promise((resolve) => {
+                    if (window.requestIdleCallback) {
+                        requestIdleCallback(() => Fingerprint2.get(resolve));
+                    } else {
+                        setTimeout(() => Fingerprint2.get(resolve), 500);
+                    }
+                });
+
+                // Create hash from fingerprint components
+                const values = components.map(component => component.value);
+                const fingerprint = Fingerprint2.x64hash128(values.join(''), 31);
+
+                // Send fingerprint to server
+                const response = await fetch('/api/assign-team', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ fingerprint })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayTeam(data.team, data.color, data.isNewAssignment);
+                } else {
+                    showError('Failed to assign team. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('An error occurred. Please try refreshing the page.');
+            }
+        }
+
+        function displayTeam(team, color, isNew) {
+            // Update background color
+            document.body.style.backgroundColor = color;
+
+            // Get text color based on background brightness
+            const textColor = getContrastColor(color);
+
+            // Update display
+            const teamDisplay = document.getElementById('team-display');
+            const message = isNew ? 
+                "Welcome! This is your team." : 
+                "Welcome back! You're still on the same team.";
+
+            teamDisplay.innerHTML = `
+                <div class="team-icon">${getTeamEmoji(team)}</div>
+                <h1 style="color: ${textColor};">You belong to</h1>
+                <div class="team-name" style="color: ${textColor};">Team ${team}!</div>
+                <p class="message" style="color: ${textColor};">${message}</p>
+                <div class="badge" style="background: rgba(255, 255, 255, 0.3); color: ${textColor};">
+                    ${isNew ? '🎉 New Assignment' : '✅ Existing Member'}
+                </div>
+            `;
+
+            // Hide loading, show team
+            document.querySelector('.loading').style.display = 'none';
+            teamDisplay.classList.add('show');
+        }
+
+        function showError(message) {
+            document.querySelector('.loading').innerHTML = 
+                `<p class="error">❌ ${message}</p>`;
+        }
+
+        function getTeamEmoji(team) {
+            const emojis = {
+                'Red': '🔴',
+                'Blue': '🔵',
+                'Green': '🟢',
+                'Yellow': '🟡',
+                'Purple': '🟣',
+                'Orange': '🟠'
+            };
+            return emojis[team] || '⚪';
+        }
+
+        // Calculate contrast color for text
+        function getContrastColor(hexColor) {
+            const r = parseInt(hexColor.substr(1, 2), 16);
+            const g = parseInt(hexColor.substr(3, 2), 16);
+            const b = parseInt(hexColor.substr(5, 2), 16);
+            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+            return brightness > 155 ? '#333333' : '#FFFFFF';
+        }
+
+        // Start assignment process on page load
+        window.addEventListener('DOMContentLoaded', assignTeam);
+    </script>
+</body>
+</html>
