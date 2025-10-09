@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Team Assignment - Dashboard</title>
+    <title>Team Assignment - Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -26,190 +26,296 @@
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             padding: 40px;
-            max-width: 600px;
+            max-width: 700px;
             width: 100%;
+        }
+
+        header {
             text-align: center;
+            margin-bottom: 40px;
         }
 
         h1 {
             color: #333;
-            margin-bottom: 10px;
             font-size: 2.5em;
+            margin-bottom: 10px;
         }
 
         .subtitle {
             color: #666;
-            margin-bottom: 30px;
             font-size: 1.1em;
         }
 
-        #qr-container {
+        .qr-section {
             background: #f9f9f9;
             border-radius: 15px;
             padding: 30px;
             margin: 30px 0;
-            min-height: 400px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            text-align: center;
         }
 
         #qr-code {
             max-width: 100%;
             height: auto;
             border-radius: 10px;
+            margin-bottom: 15px;
         }
 
-        .loading {
+        .qr-description {
             color: #666;
-            font-size: 1.2em;
+            font-size: 0.95em;
+            margin-bottom: 15px;
         }
 
-        .btn {
+        .url-display {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            color: #555;
+            font-size: 0.85em;
+            word-break: break-all;
+            border: 1px solid #eee;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 15px 40px;
-            font-size: 1.1em;
+            padding: 12px 30px;
+            font-size: 1em;
             border-radius: 50px;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
-            margin: 10px;
+            font-weight: 600;
         }
 
-        .btn:hover {
+        button:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
 
-        .btn:active {
+        button:active {
             transform: translateY(0);
         }
 
-        .stats {
-            margin-top: 30px;
+        .stats-section {
+            margin-top: 40px;
             padding: 20px;
             background: #f0f0f0;
             border-radius: 10px;
+            display: none;
         }
 
-        .stats h3 {
+        .stats-section.show {
+            display: block;
+        }
+
+        .stats-title {
             color: #333;
+            font-weight: bold;
             margin-bottom: 15px;
+            text-align: center;
         }
 
-        .team-stat {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            margin: 8px 0;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .stat-item {
             background: white;
+            padding: 15px;
             border-radius: 8px;
-            border-left: 5px solid;
+            text-align: center;
+            border-left: 4px solid;
         }
 
-        .url-display {
-            background: #f0f0f0;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 15px;
-            word-break: break-all;
-            font-family: monospace;
-            color: #555;
+        .stat-item strong {
+            display: block;
+            font-size: 1.3em;
+            margin-top: 8px;
+            color: #333;
+        }
+
+        .stat-item small {
+            color: #999;
+            font-size: 0.85em;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(102, 126, 234, 0.1);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .admin-link {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .admin-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+
+        .admin-link a:hover {
+            text-decoration: underline;
         }
 
         @media (max-width: 600px) {
             h1 {
                 font-size: 2em;
             }
-            
+
             .container {
                 padding: 25px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎯 QR Team Assignment</h1>
-        <p class="subtitle">Generate a QR code for team assignments</p>
+        <header>
+            <h1>🎯 Team Assignment</h1>
+            <p class="subtitle">Scan the QR code to join a team</p>
+        </header>
 
-        <div id="qr-container">
-            <p class="loading">Loading QR code...</p>
+        <!-- QR Code Section -->
+        <div class="qr-section">
+            <p class="qr-description">📱 Scan this QR code with your phone to get assigned to a team</p>
+            <div id="qr-container">
+                <div class="loading-spinner"></div>
+                <p style="margin-top: 15px; color: #999;">Generating QR code...</p>
+            </div>
+            <div class="url-display" id="url-display" style="display: none;"></div>
         </div>
 
-        <div class="url-display" id="url-display" style="display: none;"></div>
+        <!-- Buttons -->
+        <div class="button-group">
+            <button onclick="generateQR()">🔄 Regenerate</button>
+            <button onclick="loadStats()">📊 Statistics</button>
+        </div>
 
-        <button class="btn" onclick="generateQR()">🔄 Regenerate QR Code</button>
-        <button class="btn" onclick="loadStats()">📊 View Statistics</button>
+        <!-- Statistics Section -->
+        <div class="stats-section" id="stats-section">
+            <div class="stats-title">👥 Team Distribution</div>
+            <div class="stats-grid" id="stats-grid"></div>
+        </div>
 
-        <div class="stats" id="stats-container" style="display: none;">
-            <h3>Team Distribution</h3>
-            <div id="stats-content"></div>
+        <!-- Admin Link -->
+        <div class="admin-link">
+            <a href="/admin" target="_blank">👨‍💼 View Admin Panel</a>
         </div>
     </div>
 
     <script>
+        // Team colors and emojis for display
+        const teamColors = {
+            'Red': '#FF5252',
+            'Blue': '#2196F3',
+            'Green': '#4CAF50',
+            'Yellow': '#FFEB3B'
+        };
+
+        const teamEmojis = {
+            'Red': '🔴',
+            'Blue': '🔵',
+            'Green': '🟢',
+            'Yellow': '🟡'
+        };
+
         // Generate QR code on page load
         window.addEventListener('DOMContentLoaded', generateQR);
 
+        /**
+         * Fetches QR code from server and displays it
+         */
         async function generateQR() {
             const container = document.getElementById('qr-container');
             const urlDisplay = document.getElementById('url-display');
-            
-            container.innerHTML = '<p class="loading">Generating QR code...</p>';
+
+            container.innerHTML = '<div class="loading-spinner"></div><p style="margin-top: 15px; color: #999;">Generating QR code...</p>';
             urlDisplay.style.display = 'none';
 
             try {
+                // Call backend API to generate QR code
                 const response = await fetch('/api/generate-qr');
                 const data = await response.json();
 
                 if (data.success) {
+                    // Display the QR code image
                     container.innerHTML = `
                         <img id="qr-code" src="${data.qrCode}" alt="QR Code">
-                        <p style="margin-top: 15px; color: #666;">Scan this code to get assigned to a team</p>
+                        <p style="margin-top: 15px; color: #666; font-size: 0.9em;">
+                            Share this QR code or scan with your phone
+                        </p>
                     `;
-                    
+
+                    // Show the URL being encoded
                     urlDisplay.textContent = `Assignment URL: ${data.url}`;
                     urlDisplay.style.display = 'block';
                 } else {
-                    container.innerHTML = '<p style="color: red;">Failed to generate QR code</p>';
+                    container.innerHTML = '<p style="color: #d32f2f;">Failed to generate QR code</p>';
                 }
             } catch (error) {
                 console.error('Error:', error);
-                container.innerHTML = '<p style="color: red;">Error generating QR code</p>';
+                container.innerHTML = '<p style="color: #d32f2f;">Error generating QR code</p>';
             }
         }
 
+        /**
+         * Fetches and displays team statistics
+         */
         async function loadStats() {
-            const statsContainer = document.getElementById('stats-container');
-            const statsContent = document.getElementById('stats-content');
+            const statsSection = document.getElementById('stats-section');
+            const statsGrid = document.getElementById('stats-grid');
 
             try {
+                // Call backend API to get statistics
                 const response = await fetch('/api/stats');
                 const data = await response.json();
 
                 if (data.success) {
-                    const teamColors = {
-                        'Red': '#FF5252',
-                        'Blue': '#2196F3',
-                        'Green': '#4CAF50',
-                        'Yellow': '#FFEB3B',
-                        'Purple': '#9C27B0',
-                        'Orange': '#FF9800'
-                    };
-
-                    statsContent.innerHTML = Object.entries(data.stats)
+                    // Build HTML for each team's stats
+                    statsGrid.innerHTML = Object.entries(data.stats)
                         .map(([team, count]) => `
-                            <div class="team-stat" style="border-left-color: ${teamColors[team]}">
-                                <strong>Team ${team}</strong>
-                                <span>${count} members</span>
+                            <div class="stat-item" style="border-left-color: ${teamColors[team]}">
+                                <span>${teamEmojis[team]}</span>
+                                <strong>${count}</strong>
+                                <small>Team ${team}</small>
                             </div>
                         `).join('');
 
-                    statsContainer.style.display = 'block';
+                    statsSection.classList.add('show');
                 } else {
                     alert('Failed to load statistics');
                 }
