@@ -114,8 +114,8 @@ app.get('/api/generate-qr', async (req, res) => {
  * GET /team
  * Serves the team assignment page (what users see when they scan the QR code)
  */
-app.get('/assign', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'assign.html'));
+app.get('/team', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'team.html'));
 });
 
 /**
